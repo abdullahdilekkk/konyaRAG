@@ -34,7 +34,7 @@ def initClient():
 
     schema.add_field(field_name= "id", datatype=DataType.INT64, is_primary= True)
     schema.add_field(field_name="vector", datatype=DataType.FLOAT_VECTOR, dim = VECTOR_DIM)
-    schema.add_field(field_name="text", datatype=DataType.VARCHAR)
+    schema.add_field(field_name="text", datatype=DataType.VARCHAR, max_length=65535)
 
     index_params = client.prepare_index_params()
 
