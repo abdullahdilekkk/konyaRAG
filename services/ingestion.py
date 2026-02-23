@@ -23,17 +23,22 @@ def pdf_verilerini_veritabanina_yukle(pdf_klasoru):
     
     # Klasördeki tüm dosyaları tek tek gez:
     for dosya_adi in os.listdir(pdf_klasoru):
-        if not dosya_adi.endswith(".pdf"):
-            continue # PDF değilse diğer dosyaya geç atla.
+        if not (dosya_adi.endswith(".pdf") or dosya_adi.endswith(".txt")):
+            continue # PDF veya TXT değilse diğer dosyaya geç atla.
             
         dosya_yolu = os.path.join(pdf_klasoru, dosya_adi)
         print(f"---> İŞLENİYOR: {dosya_adi}")
         
-        # ADIM 1: PDF DOSYASINI OKUMA (Extract)
-        pdf_belgesi = fitz.open(dosya_yolu)
+        # ADIM 1: DOSYAYI OKUMA (Extract)
         tum_metin = ""
-        for sayfa in pdf_belgesi:
-            tum_metin += sayfa.get_text() + "\n"
+        
+        if dosya_adi.endswith(".pdf"):
+            pdf_belgesi = fitz.open(dosya_yolu)
+            for sayfa in pdf_belgesi:
+                tum_metin += sayfa.get_text() + "\n"
+        elif dosya_adi.endswith(".txt"):
+            with open(dosya_yolu, 'r', encoding='utf-8') as f:
+                tum_metin = f.read()
             
         # --- AĞIR TEMİZLİK (ADVANCED DATA CLEANING) BÖLÜMÜ ---
         # 1. Her türlü URL, link ve '.com', '.tr', 'php?' gibi web artıklarını sil
