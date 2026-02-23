@@ -1,8 +1,8 @@
 import os
-import re
+import re #regex kütüphanesi
 import fitz  # PyMuPDF (PDF Okuyucu)
 from sentence_transformers import SentenceTransformer
-from core.database import connectClient
+from core.database import connectClient, initClient
 from config.settings import COLLECTION_NAME, EMBEDDING_MODEL_NAME
 
 def pdf_verilerini_veritabanina_yukle(pdf_klasoru):
@@ -14,9 +14,9 @@ def pdf_verilerini_veritabanina_yukle(pdf_klasoru):
     4. Tüm bu sayıları ve metinleri Milvus veritabanımıza kaydeder.
     """
     
-    # ---------------------------------------------------------
     # HAZIRLIK: Veritabanına bağlan ve AI Modelimizi yükle
-    # ---------------------------------------------------------
+    initClient()
+    
     client = connectClient()
     
     ai_model = SentenceTransformer(EMBEDDING_MODEL_NAME)
@@ -29,19 +29,35 @@ def pdf_verilerini_veritabanina_yukle(pdf_klasoru):
         dosya_yolu = os.path.join(pdf_klasoru, dosya_adi)
         print(f"---> İŞLENİYOR: {dosya_adi}")
         
-        # =========================================================
         # ADIM 1: PDF DOSYASINI OKUMA (Extract)
-        # =========================================================
         pdf_belgesi = fitz.open(dosya_yolu)
         tum_metin = ""
         for sayfa in pdf_belgesi:
             tum_metin += sayfa.get_text() + "\n"
+            
+        # --- AĞIR TEMİZLİK (ADVANCED DATA CLEANING) BÖLÜMÜ ---
+        # 1. Her türlü URL, link ve '.com', '.tr', 'php?' gibi web artıklarını sil
+        tum_metin = re.sub(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', ' ', tum_metin)
+        tum_metin = re.sub(r'www\.\S+', ' ', tum_metin)
+        tum_metin = re.sub(r'[a-zA-Z0-9-]+\.[a-zA-Z]{2,}(?:/\S*)?', ' ', tum_metin) # Kalan yarım linkleri de sil ('konya.bel.tr' gibi)
+        tum_metin = re.sub(r'\b\w+\.php\?\S+', ' ', tum_metin) # 'detail.php?id=' tarzı pislikleri sil
         
-        # =========================================================
+        # 2. Wikipedia'nın "51. ^ ", "12. ^" tarzındaki kaynakça ve dipnot çer çöpünü uçur
+        tum_metin = re.sub(r'\d+\.\s+\^\s+', ' ', tum_metin)
+        tum_metin = re.sub(r'\[\d+\]', ' ', tum_metin)
+        
+        # 3. Kalan tuhaf parantezli kopuk heceleri ( p?haberID=... ) sil
+        tum_metin = re.sub(r'\(\s*[a-zA-Z0-9_\-\.\?\=\/]*\s*\)', ' ', tum_metin)
+        
+        # 4. "Arşivlenmiş kopya" veya "Erişim tarihi" gereksiz kelimeleri sil
+        tum_metin = tum_metin.replace("Arşivlenmiş kopya", " ")
+        tum_metin = re.sub(r'Erişim tarihi:\s*\d{1,2}\s+[A-Za-zÇŞĞÜÖİçşğüöı]+\s+\d{4}', ' ', tum_metin)
+        
+        # 5. Son ütü: Çift/Üçlü boşlukları teke indir ve satır başlıklarını temizle
+        tum_metin = re.sub(r'\s+', ' ', tum_metin).strip()
+        # ----------------------------------------------
+        
         # ADIM 2: METNİ MANTIKLI PARÇALARA BÖLME (Chunking) 
-        # Neden bölüyoruz? Çünkü AI Modeli tek seferde koskoca PDF'i anlayamaz. 
-        # Cümleleri tam ortadan kesmemek için Nokta(.) falan görünce böleceğiz.
-        # =========================================================
         cumleler = re.split(r'(?<=[.!?])\s+|\n+', tum_metin)
         
         parcalar = []       # En son elimizde kalacak temiz parçalar

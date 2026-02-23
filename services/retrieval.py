@@ -2,7 +2,7 @@ from sentence_transformers import SentenceTransformer
 from core.database import connectClient
 from config.settings import COLLECTION_NAME, EMBEDDING_MODEL_NAME
 
-def soruyu_milvusta_ara(kullanici_sorusu: str, kac_cevap_getirsin: int = 3):
+def soruyu_milvusta_ara(kullanici_sorusu: str, kac_cevap_getirsin: int = 9):
     """
     Bu fonksiyon tek bir amacı yerine getirir (RAG'ın R kısmı: Retrieval):
     1. Kullanıcının metin sorusunu (Örn: "Mevlana kimdir?") anlamsal sayılara (Vektör) çevirir.
@@ -34,7 +34,7 @@ def soruyu_milvusta_ara(kullanici_sorusu: str, kac_cevap_getirsin: int = 3):
         data=[soru_vektoru], 
         limit=kac_cevap_getirsin,
         output_fields=["text"],
-        search_params={"metric_type": "L2", "params": {"nprobe": 10}}
+        search_params={"metric_type": "COSINE", "params": {"nprobe": 10}}
     )
     
     # ---------------------------------------------------------

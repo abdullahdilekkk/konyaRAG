@@ -13,6 +13,14 @@ def connectClient():
     return client
 
 
+def veritabanini_sifirla():
+    """Milvus içindeki tüm eski verileri (Collection) siler ve temizler."""
+    client = connectClient()
+    if client.has_collection(COLLECTION_NAME):
+        client.drop_collection(COLLECTION_NAME)
+        print(f"Başarılı: '{COLLECTION_NAME}' isimli hafıza tamamen silindi!")
+    else:
+        print("Uyarı: Silinecek bir hafıza zaten bulunmuyor.")
 def initClient():
     admin_client = MilvusClient(
         uri=MILVUS_URI,
@@ -41,7 +49,7 @@ def initClient():
     index_params.add_index(
         field_name="vector",
         index_type="AUTOINDEX",
-        metric_type="L2"
+        metric_type="COSINE"
         )
     
 
