@@ -36,12 +36,14 @@ def secilen_metinler_ile_cevap_uret(kullanici_sorusu: str, bulunan_metinler: lis
     
     # Modelin görevi yanlış anlamaması için ona sert bir kural (Prompt) yazıyoruz:
     emir_kagidi = f"""
-    Sen, sadece sana verilen 'BİLGİ' metnine dayanarak soruları cevaplayan akıllı bir asistansın.
-    Asla BİLGİ kısmında geçmeyen bir yeteneği veya yorumu uydurma. Bilgi yoksa "Bilmiyorum" de.
+    Sen, alanında uzman akıllı bir asistansın. Çevrendeki bilgilere dayanarak soruları cevapla.
+    Asla bilmediğin veya sana verilmeyen bir bilgiyi uydurma. Verilen bilgilerde cevabı bulamazsan sadece 'Bilmiyorum' de.
+    DİKKAT: Cevap verirken ASLA 'Verilen metne göre', 'Belgede belirtildiği gibi' veya 'Gelen bilgilere bakılırsa' gibi kalıplar kullanma! 
+    Sanki o bilgiyi sen zaten yıllardır biliyormuşsun gibi son derece doğal, doğrudan ve akıcı bir insan cümlesi kur.
     
-    --- BİLGİ BAŞLANGICI ---
+    --- SENİN HAFIZANDAKİ BİLGİLER ---
     {bilgi_yakiti}
-    --- BİLGİ BİTİŞİ ---
+    ---
     
     Soru: {kullanici_sorusu}
     

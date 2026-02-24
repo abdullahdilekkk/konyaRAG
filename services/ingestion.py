@@ -42,11 +42,24 @@ def pdf_verilerini_veritabanina_yukle(pdf_klasoru):
             with open(dosya_yolu, 'r', encoding='utf-8') as f:
                 tum_metin = f.read()
         elif dosya_adi.endswith(".xlsx") or dosya_adi.endswith(".xls"):
-            # Excel dosyalarını 'pandas' tablosuna (DataFrame) alıyoruz.
-            df = pd.read_excel(dosya_yolu)
-            df = df.fillna("") # Tablodaki boş hücreleri 'NaN' yerine temiz boşluk yap
-            # Tabloyu baştan aşağı metne (String) dönüştür
-            tum_metin = df.to_string(index=False)
+            # Excel dosyalarının tüm sekmelerini (sheet) okumak için sheet_name=None yapıyoruz.
+            excel_sekmeleri = pd.read_excel(dosya_yolu, sheet_name=None)
+            
+            tum_sayfalar = []
+            for sekme_adi, df in excel_sekmeleri.items():
+                df = df.fillna("") # Tablodaki boş hücreleri 'NaN' yerine temiz boşluk yap
+                
+                # Tabloları düz string yapmak parçalanmaya (chunking) uygun değildir.
+                # Bunun yerine her satırı yatay olarak birleştirip tek bir uzun cümle yapıyoruz:
+                satirlar_listesi = []
+                for index, row in df.iterrows():
+                    dolu_hucreler = [str(val).replace('\n', ' ').strip() for val in row if str(val).strip() != ""]
+                    if dolu_hucreler: # Eğer o satır tamamen boş değilse
+                        satirlar_listesi.append(" | ".join(dolu_hucreler) + ".")
+                
+                tum_sayfalar.append(f"--- SEKME: {sekme_adi} ---\n" + "\n".join(satirlar_listesi))
+                
+            tum_metin = "\n".join(tum_sayfalar)
             
         # --- AĞIR TEMİZLİK (ADVANCED DATA CLEANING) BÖLÜMÜ ---
         # 1. Her türlü URL, link ve '.com', '.tr', 'php?' gibi web artıklarını sil

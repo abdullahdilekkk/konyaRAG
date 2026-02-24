@@ -1,14 +1,15 @@
 from pymilvus import connections, utility, Collection
 
-from config.settings import MILVUS_URI, MILVUS_TOKEN
+from config.settings import MILVUS_URI, MILVUS_TOKEN, DB_NAME
 
 def milvus_durumunu_goster():
-    # Projedeki gerçek Milvus bilgilerimizle bağlanalım:
+    
     try:
-        connections.connect(alias="default", uri=MILVUS_URI, token=MILVUS_TOKEN)
+        connections.connect(alias="default", uri=MILVUS_URI, token=MILVUS_TOKEN, db_name=DB_NAME)
         print("Milvus'a bağlanıldı! İçerideki veriler taranıyor...\n")
         
-        tablolar = utility.list_collections()
+        # DİKKAT: utility.list_collections(db_name=...) demezsek her zaman gidip "default" odasındakileri getirir.
+        tablolar = utility.list_collections(db_name=DB_NAME)
         
         if not tablolar:
             print("❌ Milvus içinde şu an HİÇBİR tablo veya veri yok. Tamamen boş/temiz.")
