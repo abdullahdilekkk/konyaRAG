@@ -98,7 +98,7 @@ if __name__ == "__main__":
         print("\n⏳ Milvus Veritabanında (Hafızada) eşleşen parçalar aranıyor...")
         
         # 2. Hafızadaki (Milvus'taki) ilgili PDF parçacıklarını arayıp buluyoruz
-        bulunan_parcalar = soruyu_milvusta_ara(kralin_sorusu, kac_cevap_getirsin=3)
+        bulunan_parcalar = soruyu_milvusta_ara(kralin_sorusu, kac_cevap_getirsin=9)
         
         # 3. Bulunan bu parçaları ve kullanıcının girdiği soruyu Yapay Zekaya gönderiyoruz
         if bulunan_parcalar:

@@ -10,14 +10,13 @@ def soruyu_milvusta_ara(kullanici_sorusu: str, kac_cevap_getirsin: int = 9):
     3. Veritabanındaki binlerce parça arasından soru vektörüne en yakın/benzer (Semantic) parçaları bulur.
     4. Sadece bulunan metinleri okunaklı bir liste olarak geri döndürür.
     """
-    # ADIM 1: SORUYU VEKTÖRE (SAYILARA) ÇEVİRME
     ai_model = SentenceTransformer(EMBEDDING_MODEL_NAME)
     
     # DİKKAT ÖĞRETİCİ NOT (Neden [0].tolist() yapıyoruz?):
     # .encode() işlemi aslen liste tabanlı çalışır. [kullanici_sorusu] diyerek tek elemanlı bir liste verdik.
     # Model cevabı geri verirken dışarıda bir liste kabuğuyla verir: [ [0.12, 0.45, -0.67] ]
     # Veritabanı sadece içerdeki saf vektörü [0.12, 0.45...] istediği için, [0] diyerek o dış kabuğu kırıyoruz.
-    soru_vektoru = ai_model.encode([kullanici_sorusu])[0].tolist()
+    soru_vektoru = ai_model.encode([f"query: {kullanici_sorusu}"])[0].tolist()
     
     # ---------------------------------------------------------
     # ADIM 2: VERİTABANINDA (MILVUS) ANLAMSAL ARAMA YAPMA
@@ -59,7 +58,7 @@ if __name__ == "__main__":
     print("Milvus veritabanında taranıyor...\n")
     
     try:
-        cevap_parcalari = soruyu_milvusta_ara(ornek_soru, kac_cevap_getirsin=2)
+        cevap_parcalari = soruyu_milvusta_ara(ornek_soru, kac_cevap_getirsin=9)
         print("--- BULUNAN EN YAKIN METİNLER ---")
         for i, metin in enumerate(cevap_parcalari, 1):
             print(f"{i}. Parça:\n{metin}\n")

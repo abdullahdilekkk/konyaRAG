@@ -73,7 +73,7 @@ def senaryo_soru_sorma():
         print("⏳ Hafıza (Milvus) taranıyor...")
         
         # 1. ADIM: Ustamızı çağırıp "Bu soruya en yakın PDF parçasını bana getir" diyoruz (Retrieval)
-        bulunan_parcalar = soruyu_milvusta_ara(kullanici_sorusu, kac_cevap_getirsin=3)
+        bulunan_parcalar = soruyu_milvusta_ara(kullanici_sorusu, kac_cevap_getirsin=9)
         
         if bulunan_parcalar:
              print(f"✅ Hafızada ({len(bulunan_parcalar)}) adet ilgili metin bulundu.")

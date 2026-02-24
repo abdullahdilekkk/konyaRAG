@@ -138,7 +138,7 @@ def pdf_verilerini_veritabanina_yukle(pdf_klasoru):
             
         client.insert(collection_name=COLLECTION_NAME, data=kaydedilecek_veriler)
         print(f"BAŞARILI: {dosya_adi} tamamen Milvus'a kaydedildi!\n")
-
+        client.flush(collection_name=COLLECTION_NAME)
 
 if __name__ == "__main__":
     import pathlib
