@@ -10,10 +10,7 @@ def soruyu_milvusta_ara(kullanici_sorusu: str, kac_cevap_getirsin: int = 9):
     3. Veritabanındaki binlerce parça arasından soru vektörüne en yakın/benzer (Semantic) parçaları bulur.
     4. Sadece bulunan metinleri okunaklı bir liste olarak geri döndürür.
     """
-    
-    # ---------------------------------------------------------
     # ADIM 1: SORUYU VEKTÖRE (SAYILARA) ÇEVİRME
-    # ---------------------------------------------------------
     ai_model = SentenceTransformer(EMBEDDING_MODEL_NAME)
     
     # DİKKAT ÖĞRETİCİ NOT (Neden [0].tolist() yapıyoruz?):

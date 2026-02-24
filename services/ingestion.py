@@ -5,10 +5,12 @@ from sentence_transformers import SentenceTransformer
 from core.database import connectClient, initClient
 from config.settings import COLLECTION_NAME, EMBEDDING_MODEL_NAME
 
+import pandas as pd # Excel Okuyucu
+
 def pdf_verilerini_veritabanina_yukle(pdf_klasoru):
     """
     Bu fonksiyon:
-    1. PDF'leri açar ve harf harf okur (Extract).
+    1. İlgili dosyaları harf harf okur (Extract).
     2. Okunan devasa metni anlamı bozulmayacak şekilde küçük parçalara (Chunk) ayırır.
     3. Bu parçaları yapay zekanın anlayacağı sayılara (Vektörlere / Embeddings) dönüştürür.
     4. Tüm bu sayıları ve metinleri Milvus veritabanımıza kaydeder.
@@ -23,8 +25,8 @@ def pdf_verilerini_veritabanina_yukle(pdf_klasoru):
     
     # Klasördeki tüm dosyaları tek tek gez:
     for dosya_adi in os.listdir(pdf_klasoru):
-        if not (dosya_adi.endswith(".pdf") or dosya_adi.endswith(".txt")):
-            continue # PDF veya TXT değilse diğer dosyaya geç atla.
+        if not (dosya_adi.endswith(".pdf") or dosya_adi.endswith(".txt") or dosya_adi.endswith(".xlsx") or dosya_adi.endswith(".xls")):
+            continue # İzin verilen formatlardan değilse diğer dosyaya geç atla.
             
         dosya_yolu = os.path.join(pdf_klasoru, dosya_adi)
         print(f"---> İŞLENİYOR: {dosya_adi}")
@@ -39,6 +41,12 @@ def pdf_verilerini_veritabanina_yukle(pdf_klasoru):
         elif dosya_adi.endswith(".txt"):
             with open(dosya_yolu, 'r', encoding='utf-8') as f:
                 tum_metin = f.read()
+        elif dosya_adi.endswith(".xlsx") or dosya_adi.endswith(".xls"):
+            # Excel dosyalarını 'pandas' tablosuna (DataFrame) alıyoruz.
+            df = pd.read_excel(dosya_yolu)
+            df = df.fillna("") # Tablodaki boş hücreleri 'NaN' yerine temiz boşluk yap
+            # Tabloyu baştan aşağı metne (String) dönüştür
+            tum_metin = df.to_string(index=False)
             
         # --- AĞIR TEMİZLİK (ADVANCED DATA CLEANING) BÖLÜMÜ ---
         # 1. Her türlü URL, link ve '.com', '.tr', 'php?' gibi web artıklarını sil
