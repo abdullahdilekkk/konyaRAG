@@ -28,10 +28,13 @@ def secilen_metinler_ile_cevap_uret(kullanici_sorusu: str, bulunan_metinler: lis
     bilgi_yakiti = "\n".join(bulunan_metinler)
     
     # SENİOR DEBUG (HATA AYIKLAMA) NOTU:
-    # Yapay zekaya gitmeden önce, veritabanından cımbızladığımız o 3 metin parçası acaba neymiş?
-    # Gerçekten içinde etliekmek geçiyor muymuş? Kendimiz okuyalım diye ekrana basıyoruz:
-    print("\n--- 🔍 MİLVUS'TAN GELEN HAM BİLGİ METNİ (LLM'in Okuduğu) ---")
-    print(bilgi_yakiti)
+    toplam_kelime = len(bilgi_yakiti.split())
+    toplam_harf = len(bilgi_yakiti)
+    
+    # Ekrana tüm PDF sayfalarını basıp terminali çöpe çevirmek yerine, LLM'in ne kadar veri okuduğunu
+    # istatistiksel ve profesyonel bir şekilde (Enterprise tarzı) özetliyoruz.
+    print(f"\n--- 🔍 MİLVUS BAĞLAM ÖZETİ ---")
+    print(f"LLM'e Toplam: {toplam_kelime} kelimelik (yaklaşık {toplam_harf} karakter) bilgi gönderildi.")
     print("----------------------------------------------------------\n")
     
     # Modelin görevi yanlış anlamaması için ona sert bir kural (Prompt) yazıyoruz:
@@ -56,24 +59,23 @@ def secilen_metinler_ile_cevap_uret(kullanici_sorusu: str, bulunan_metinler: lis
     payload = {
         "model": LLM_MODEL_NAME, # Hangi modeli kullanacağız? (Örn: "llama3", "mistral" veya settings'teki model)
         "prompt": emir_kagidi,
-        "stream": False # Cevabı kelime kelime yavaşça değil, tamamen bitince tek seferde istiyoruz (False)
+        "stream": True # HIZLANDIRMA: Cevabı tek seferde beklemiyoruz, ChatGPT gibi akıtarak alıyoruz (True)
     }
     
     # Ollama'ya kendi bilgisayarımızdaki (localhost) sistemden JSON formatında istek atıyoruz:
-    gelen_cevap = requests.post(OLLAMA_URL, json=payload)
+    gelen_cevap = requests.post(OLLAMA_URL, json=payload, stream=True)
     
     # OLLAMA BİR HATA DÖNDÜRDÜYSE (Model yok, silinmiş veya port yanlışsa)
     if gelen_cevap.status_code != 200:
-        return f"OLLAMA HATASI! (Kod: {gelen_cevap.status_code}) -> {gelen_cevap.text}"
+        yield f"OLLAMA HATASI! (Kod: {gelen_cevap.status_code}) -> {gelen_cevap.text}"
+        return
     
-    # 4. CEVABI AÇ (Response Parsing):
-    # Kapıdan dönen kargoyu önce bilgisayarın anladığı dilden JSON sözlüğüne çeviriyoruz
-    sonuc_json = gelen_cevap.json()
-    
-    # O sözlüğün içinden asıl Türkçe cümlenin yazdığı "response" etiketini cımbızla çekiyoruz
-    olusan_cevap = sonuc_json.get("response", "HATA: Ollama'dan başarılı döndü ama içi boş.")
-    
-    return olusan_cevap.strip()
+    # HIZLI VE AKICI YANIT (Streaming Parsing):
+    import json
+    for satir in gelen_cevap.iter_lines():
+        if satir:
+            veri = json.loads(satir)
+            yield veri.get("response", "")
 
 
 if __name__ == "__main__":

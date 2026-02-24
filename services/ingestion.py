@@ -49,13 +49,28 @@ def pdf_verilerini_veritabanina_yukle(pdf_klasoru):
             for sekme_adi, df in excel_sekmeleri.items():
                 df = df.fillna("") # Tablodaki boş hücreleri 'NaN' yerine temiz boşluk yap
                 
+                # PROFESYONEL RAG MİMARİSİ: Table-to-Text (Tablodan Hikayeye)
                 # Tabloları düz string yapmak parçalanmaya (chunking) uygun değildir.
-                # Bunun yerine her satırı yatay olarak birleştirip tek bir uzun cümle yapıyoruz:
+                # Her satırı (row) alıyoruz, ve içindeki hücreleri kendi SÜTUN BAŞLIĞI ile birleştiriyoruz.
+                sutun_basliklari = df.columns.tolist()
+                
                 satirlar_listesi = []
                 for index, row in df.iterrows():
-                    dolu_hucreler = [str(val).replace('\n', ' ').strip() for val in row if str(val).strip() != ""]
-                    if dolu_hucreler: # Eğer o satır tamamen boş değilse
-                        satirlar_listesi.append(" | ".join(dolu_hucreler) + ".")
+                    hucre_cumleleri = []
+                    # O satırdaki her bir hücreyi (col_idx) ve içindeki veriyi (val) geziyoruz
+                    for col_idx, val in enumerate(row):
+                        temiz_veri = str(val).replace('\n', ' ').strip()
+                        # Eğer hücre boş değilse ve "Unnamed" (Pandas'ın gizli boş başlığı) değilse
+                        if temiz_veri and str(temiz_veri) != "nan" and str(temiz_veri) != "NaN":
+                            baslik = str(sutun_basliklari[col_idx]).replace('\n', ' ').strip()
+                            if "Unnamed" not in baslik:
+                                hucre_cumleleri.append(f"[{baslik}]: {temiz_veri}")
+                            else:
+                                hucre_cumleleri.append(temiz_veri) # Başlığı olmayan düz veri
+                                
+                    if hucre_cumleleri: # Eğer o satır tamamen boş değilse
+                        # Hepsini aralarına nokta (.) koyarak profesyonel bir metne (paragrafa) çevir
+                        satirlar_listesi.append(" ".join(hucre_cumleleri) + ".")
                 
                 tum_sayfalar.append(f"--- SEKME: {sekme_adi} ---\n" + "\n".join(satirlar_listesi))
                 

@@ -2,6 +2,9 @@ from sentence_transformers import SentenceTransformer
 from core.database import connectClient
 from config.settings import COLLECTION_NAME, EMBEDDING_MODEL_NAME
 
+# Modeli her soruda baştan yüklememek için (HIZ İÇİN) Global hafızaya alıyoruz.
+_AI_MODEL = None
+
 def soruyu_milvusta_ara(kullanici_sorusu: str, kac_cevap_getirsin: int = 9):
     """
     Bu fonksiyon tek bir amacı yerine getirir (RAG'ın R kısmı: Retrieval):
@@ -10,13 +13,18 @@ def soruyu_milvusta_ara(kullanici_sorusu: str, kac_cevap_getirsin: int = 9):
     3. Veritabanındaki binlerce parça arasından soru vektörüne en yakın/benzer (Semantic) parçaları bulur.
     4. Sadece bulunan metinleri okunaklı bir liste olarak geri döndürür.
     """
-    ai_model = SentenceTransformer(EMBEDDING_MODEL_NAME)
+    global _AI_MODEL
     
+    if _AI_MODEL is None:
+        print("İlk soru sorulduğu için AI Model hafızaya yükleniyor (Lütfen bekleyin)...\n")
+        _AI_MODEL = SentenceTransformer(EMBEDDING_MODEL_NAME)
+        
+    # ADIM 1: SORUYU VEKTÖRE (SAYILARA) ÇEVİRME
     # DİKKAT ÖĞRETİCİ NOT (Neden [0].tolist() yapıyoruz?):
     # .encode() işlemi aslen liste tabanlı çalışır. [kullanici_sorusu] diyerek tek elemanlı bir liste verdik.
     # Model cevabı geri verirken dışarıda bir liste kabuğuyla verir: [ [0.12, 0.45, -0.67] ]
     # Veritabanı sadece içerdeki saf vektörü [0.12, 0.45...] istediği için, [0] diyerek o dış kabuğu kırıyoruz.
-    soru_vektoru = ai_model.encode([f"query: {kullanici_sorusu}"])[0].tolist()
+    soru_vektoru = _AI_MODEL.encode([f"query: {kullanici_sorusu}"])[0].tolist()
     
     # ---------------------------------------------------------
     # ADIM 2: VERİTABANINDA (MILVUS) ANLAMSAL ARAMA YAPMA

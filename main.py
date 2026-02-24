@@ -80,12 +80,15 @@ def senaryo_soru_sorma():
              print("⏳ Şimdi Yapay Zeka (Ollama) cümleyi toparlıyor...\n")
              
              # 2. ADIM: Bulduğumuz o metinleri ve soruyu diğer ustamıza (Generation) verip Türkçe cevap istiyoruz
-             nihai_cevap = secilen_metinler_ile_cevap_uret(kullanici_sorusu, bulunan_parcalar)
+             cevap_akisi = secilen_metinler_ile_cevap_uret(kullanici_sorusu, bulunan_parcalar)
              
              print("🤖 OLLAMA CEVABI:")
              print("------------------------------------------------")
-             print(nihai_cevap)
-             print("------------------------------------------------\n")
+             import sys
+             for kelime_parcasi in cevap_akisi:
+                 sys.stdout.write(kelime_parcasi)
+                 sys.stdout.flush() # Ekrana anında basılması için tamponu temizle
+             print("\n------------------------------------------------\n")
         else:
              print("❌ Özür dilerim, hafızada bu soruya uyan hiçbir kitap/pdf parçası bulamadım.")
              print("İpucu: Belki de henüz PDF yüklemediniz? (Menüden 1. seçeneği deneyin)\n")
